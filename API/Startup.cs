@@ -27,15 +27,10 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // services.AddCors();
 
             services.AddControllers();
-            services.AddCors(options => {
-                options.AddDefaultPolicy(
-                    builder => {
-                        builder.WithOrigins("http://localhost:5000", "https://localhost:5001");
-                    }
-                );
-            });
+
             services.AddDbContext<DataContext>(options => 
             {
                 options.UseNpgsql(_config.GetConnectionString("PostgreSqlConnection"));   
@@ -43,6 +38,13 @@ namespace API
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Dating App API", Version = "v1" });
+            });
+
+            services.AddCors(options => {
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder => builder.WithOrigins(
+                        "http://localhost:4200", "https://localhost:4200"
+                    ).AllowAnyHeader().AllowAnyMethod());
             });
         }
 
@@ -56,13 +58,13 @@ namespace API
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
             }
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseCors("AllowSpecificOrigin");
 
-            app.UseCors();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
